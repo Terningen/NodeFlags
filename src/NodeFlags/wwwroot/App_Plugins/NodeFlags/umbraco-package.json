@@ -1,0 +1,14 @@
+{
+  "id": "NodeFlags",
+  "name": "NodeFlags",
+  "version": "0.0.0",
+  "allowTelemetry": true,
+  "extensions": [
+    {
+      "name": "Node Flags Bundle",
+      "alias": "NodeFlags.Bundle",
+      "type": "bundle",
+      "js": "/App_Plugins/NodeFlags/node-flags.js"
+    }
+  ]
+}

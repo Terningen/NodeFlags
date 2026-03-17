@@ -1,0 +1,23 @@
+{
+  "name": "node-flags",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "watch": "tsc && vite build --watch",
+    "build": "tsc && vite build",
+    "generate-client": "node scripts/generate-openapi.js https://localhost:44306/umbraco/swagger/nodeflags/swagger.json"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.85.0",
+    "@umbraco-cms/backoffice": "^*",
+    "autoprefixer": "^10.4.21",
+    "chalk": "^5.6.2",
+    "cross-env": "^10.1.0",
+    "node-fetch": "^3.3.2",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9"
+  }
+}
