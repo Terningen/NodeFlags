@@ -1,10 +1,10 @@
-import { UMB_DOCUMENT_ENTITY_TYPE as t } from "@umbraco-cms/backoffice/document";
-const a = [
+import { UMB_DOCUMENT_ENTITY_TYPE as a } from "@umbraco-cms/backoffice/document";
+const t = [
   {
     name: "Node Flags Entrypoint",
     alias: "NodeFlags.Entrypoint",
     type: "backofficeEntryPoint",
-    js: () => import("./entrypoint-CJ3bi_k7.js")
+    js: () => import("./entrypoint-CCICCTbP.js")
   }
 ], o = [
   {
@@ -12,20 +12,20 @@ const a = [
     kind: "default",
     alias: "NodeFlags.EntityAction.Document.Flags",
     name: "Node Flags Document Action",
-    api: () => import("./node-flags-entity-action-C3O8ERVt.js"),
-    forEntityTypes: [t],
+    api: () => import("./node-flags-entity-action-CDJnQXnZ.js"),
+    forEntityTypes: [a],
     weight: 250,
     meta: {
       label: "Flags",
       icon: "icon-flag"
     }
   }
-], n = [
+], e = [
   {
     name: "Node Flags Dashboard",
     alias: "NodeFlags.Dashboard",
     type: "dashboard",
-    js: () => import("./node-flags-dashboard.element-KpTOYc34.js"),
+    js: () => import("./node-flags-dashboard.element-B8nvYPcn.js"),
     weight: 100,
     meta: {
       label: "Node Flags",
@@ -37,13 +37,19 @@ const a = [
         match: "Umb.Section.Settings"
       }
     ]
+  },
+  {
+    type: "modal",
+    alias: "NodeFlags.Modal.NodeFlag",
+    name: "Node Flag Modal",
+    element: () => import("./node-flag-modal.element-CbKAxESB.js")
   }
-], e = [
-  ...a,
+], i = [
+  ...t,
   ...o,
-  ...n
+  ...e
 ];
 export {
-  e as manifests
+  i as manifests
 };
 //# sourceMappingURL=node-flags.js.map

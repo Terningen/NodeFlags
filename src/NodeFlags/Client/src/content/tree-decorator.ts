@@ -44,21 +44,26 @@ const applyNodeState = (anchor: DecoratedAnchor, state?: NodeFlagsForNode) => {
   anchor.style.alignItems = "center";
   anchor.style.gap = "6px";
 
-  state.activeFlags.forEach((flag) => {
-    const badge = document.createElement("span");
-    badge.className = "node-flags-badge";
-    badge.textContent = flag.icon;
-    badge.style.display = "inline-flex";
-    badge.style.alignItems = "center";
-    badge.style.justifyContent = "center";
-    badge.style.padding = "2px 6px";
-    badge.style.borderRadius = "999px";
-    badge.style.fontSize = "10px";
-    badge.style.fontWeight = "700";
-    badge.style.color = "#ffffff";
-    badge.style.background = flag.iconColor;
-    anchor.appendChild(badge);
-  });
+  if (!effective) {
+    return;
+  }
+
+  const badge = document.createElement("span");
+  badge.className = "node-flags-badge";
+  badge.style.display = "inline-flex";
+  badge.style.alignItems = "center";
+  badge.style.justifyContent = "center";
+  badge.style.width = "18px";
+  badge.style.minWidth = "18px";
+  badge.style.height = "18px";
+
+  const icon = document.createElement("uui-icon");
+  icon.setAttribute("name", effective.icon);
+  icon.style.color = effective.iconColor;
+  icon.style.fontSize = "16px";
+
+  badge.appendChild(icon);
+  anchor.prepend(badge);
 };
 
 const refreshTreeStyles = async () => {

@@ -1,36 +1,13 @@
-import {
-  LitElement,
-  css,
-  html,
-  customElement,
-  state,
-} from "@umbraco-cms/backoffice/external/lit";
+import { LitElement, css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
+import { umbOpenModal, umbConfirmModal } from "@umbraco-cms/backoffice/modal";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import {
   nodeFlagsApi,
   type NodeFlagDefinition,
   type NodeFlagDefinitionSaveModel,
 } from "../api/node-flags.js";
-
-type EditorState = NodeFlagDefinitionSaveModel & {
-  key?: string;
-};
-
-const ICON_OPTIONS = [
-  { value: "icon-flag", label: "Flag" },
-  { value: "icon-alert", label: "Alert" },
-  { value: "icon-wand", label: "Wand" },
-] as const;
-
-const createDefaultEditorState = (): EditorState => ({
-  name: "Flag name",
-  icon: "icon-flag",
-  iconColor: "#000000",
-  backgroundColor: "#f3f4f6",
-  sortOrder: 0,
-  isEnabled: true,
-});
+import { UMB_NODE_FLAG_MODAL } from "./node-flag-modal.token.js";
 
 @customElement("node-flags-dashboard")
 export class NodeFlagsDashboardElement extends UmbElementMixin(LitElement) {
@@ -42,9 +19,6 @@ export class NodeFlagsDashboardElement extends UmbElementMixin(LitElement) {
 
   @state()
   private _saving = false;
-
-  @state()
-  private _editor: EditorState = createDefaultEditorState();
 
   @state()
   private _error = "";
@@ -75,66 +49,63 @@ export class NodeFlagsDashboardElement extends UmbElementMixin(LitElement) {
     }
   }
 
-  #startCreate = () => {
-    this._editor = createDefaultEditorState();
-  };
+  async #openCreateModal() {
+    const value = await umbOpenModal(this, UMB_NODE_FLAG_MODAL, {
+      data: { headline: "Create flag" },
+      value: {
+        name: "",
+        icon: "icon-flag",
+        iconColor: "#000000",
+        backgroundColor: "#f3f4f6",
+        sortOrder: 0,
+        isEnabled: true,
+      },
+    }).catch(() => undefined);
 
-  #startEdit(definition: NodeFlagDefinition) {
-    this._editor = {
-      key: definition.key,
-      name: definition.name,
-      icon: definition.icon,
-      iconColor: definition.iconColor,
-      backgroundColor: definition.backgroundColor,
-      sortOrder: definition.sortOrder,
-      isEnabled: definition.isEnabled,
-    };
+    if (!value) {
+      return;
+    }
+
+    await this.#save(value);
   }
 
-  #onInput =
-    (field: keyof EditorState) =>
-    (event: Event) => {
-      const target = event.target as HTMLInputElement | HTMLSelectElement;
-      const value =
-        field === "isEnabled"
-          ? (target as HTMLInputElement).checked
-          : field === "sortOrder"
-            ? Number(target.value || 0)
-            : target.value;
+  async #openEditModal(definition: NodeFlagDefinition) {
+    const value = await umbOpenModal(this, UMB_NODE_FLAG_MODAL, {
+      data: { headline: "Edit flag" },
+      value: {
+        name: definition.name,
+        icon: definition.icon,
+        iconColor: definition.iconColor,
+        backgroundColor: definition.backgroundColor,
+        sortOrder: definition.sortOrder,
+        isEnabled: definition.isEnabled,
+      },
+    }).catch(() => undefined);
 
-      this._editor = {
-        ...this._editor,
-        [field]: value,
-      };
-    };
+    if (!value) {
+      return;
+    }
 
-  #save = async () => {
+    await this.#save(value, definition.key);
+  }
+
+  async #save(payload: NodeFlagDefinitionSaveModel, key?: string) {
     this._saving = true;
     this._error = "";
 
-    const payload: NodeFlagDefinitionSaveModel = {
-      name: this._editor.name.trim(),
-      icon: this._editor.icon?.trim() || "icon-flag",
-      iconColor: this._editor.iconColor,
-      backgroundColor: this._editor.backgroundColor,
-      sortOrder: this._editor.sortOrder,
-      isEnabled: this._editor.isEnabled,
-    };
-
     try {
-      if (!payload.name) {
+      if (!payload.name?.trim()) {
         throw new Error("A flag name is required.");
       }
 
-      if (this._editor.key) {
-        await nodeFlagsApi.updateDefinition(this._editor.key, payload);
+      if (key) {
+        await nodeFlagsApi.updateDefinition(key, payload);
         this.#notify("positive", "Node flag updated", payload.name);
       } else {
         await nodeFlagsApi.createDefinition(payload);
         this.#notify("positive", "Node flag created", payload.name);
       }
 
-      this._editor = createDefaultEditorState();
       await this.#loadDefinitions();
     } catch (error) {
       this._error = this.#toMessage(error);
@@ -142,17 +113,27 @@ export class NodeFlagsDashboardElement extends UmbElementMixin(LitElement) {
     } finally {
       this._saving = false;
     }
-  };
+  }
 
-  #delete = async (definition: NodeFlagDefinition) => {
+  async #delete(definition: NodeFlagDefinition) {
+    const confirmed = await umbConfirmModal(this, {
+      color: "danger",
+      headline: `Delete ${definition.name}`,
+      content: `Are you sure you want to delete ${definition.name}?`,
+      confirmLabel: "Delete",
+    })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!confirmed) {
+      return;
+    }
+
     this._saving = true;
 
     try {
       await nodeFlagsApi.deleteDefinition(definition.key);
       this.#notify("positive", "Node flag deleted", definition.name);
-      if (this._editor.key === definition.key) {
-        this._editor = createDefaultEditorState();
-      }
       await this.#loadDefinitions();
     } catch (error) {
       this._error = this.#toMessage(error);
@@ -160,7 +141,7 @@ export class NodeFlagsDashboardElement extends UmbElementMixin(LitElement) {
     } finally {
       this._saving = false;
     }
-  };
+  }
 
   #notify(color: "positive" | "danger" | "warning", headline: string, message: string) {
     this.#notificationContext?.peek(color, {
@@ -184,163 +165,101 @@ export class NodeFlagsDashboardElement extends UmbElementMixin(LitElement) {
     return "Unknown error";
   }
 
+  #renderRows() {
+    if (this._loading) {
+      return html`
+        <uui-table-row>
+          <uui-table-cell colspan="5" style="padding: 16px 20px;">Loading flags...</uui-table-cell>
+        </uui-table-row>
+      `;
+    }
+
+    if (this._definitions.length === 0) {
+      return html`
+        <uui-table-row>
+          <uui-table-cell colspan="5" style="padding: 16px 20px;">No flags created yet.</uui-table-cell>
+        </uui-table-row>
+      `;
+    }
+
+    return this._definitions.map(
+      (definition) => html`
+      <umb-table>
+      
+      
+      
+      </umb-table>
+        <uui-table-row class="definition-row">
+          <uui-table-cell role="cell" class="icon-column">
+            <umb-icon name=${definition.icon} style=${`color:${definition.iconColor}`}></umb-icon>
+          </uui-table-cell>
+          <uui-table-cell role="cell" class="name-column">
+            <uui-button
+              look="default"
+              color="default"
+              label=${definition.name}
+              @click=${() => this.#openEditModal(definition)}
+              ?disabled=${this._saving}
+            >
+              ${definition.name}
+            </uui-button>
+          </uui-table-cell>
+          <uui-table-cell role="cell" class="status-column">
+            <uui-tag size="s">${definition.isEnabled ? "Enabled" : "Disabled"}</uui-tag>
+          </uui-table-cell>
+          <uui-table-cell role="cell" class="priority-column">${definition.sortOrder}</uui-table-cell>
+          <uui-table-cell role="cell" class="actions-column">
+            <div class="row-actions">
+              <uui-button
+                compact
+                look="outline"
+                color="default"
+                label="Edit"
+                @click=${() => this.#openEditModal(definition)}
+                ?disabled=${this._saving}
+              ></uui-button>
+              <uui-button
+                compact
+                look="outline"
+                color="danger"
+                label="Delete"
+                @click=${() => this.#delete(definition)}
+                ?disabled=${this._saving}
+              ></uui-button>
+            </div>
+          </uui-table-cell>
+        </uui-table-row>
+      `
+    );
+  }
+
   render() {
     return html`
-      <div class="layout tw-dashboard-layout">
-        <uui-box>
-          <div class="box-headline tw-dashboard-box-headline">
-            <span class="box-headline-title">${this._editor.key ? "Edit flag" : "Create flag"}</span>
-            <uui-button
-              look="primary"
-              color="default"
-              label="New flag"
-              @click=${this.#startCreate}
-              ?disabled=${this._saving}
-            ></uui-button>
-          </div>
-
-          <p class="intro">Create reusable flags for editors to apply in the Content tree.</p>
-
-          <div class="form tw-dashboard-form">
-            <label class="field">
-              <span class="field-label">Name</span>
-              <input
-                class="text-input"
-                .value=${this._editor.name}
-                @input=${this.#onInput("name")}
-                placeholder="Flag name"
-              />
-            </label>
-
-            <label class="field">
-              <span class="field-label">Icon</span>
-              <select class="text-input" .value=${this._editor.icon ?? "icon-flag"} @change=${this.#onInput("icon")}>
-                ${ICON_OPTIONS.map(
-                  (option) => html`<option value=${option.value}>${option.label}</option>`
-                )}
-              </select>
-            </label>
-
-            <div class="field-grid tw-dashboard-field-grid">
-              <label class="field">
-                <span class="field-label">Icon color</span>
-                <div class="color-field">
-                  <input
-                    class="color-input"
-                    type="color"
-                    .value=${this._editor.iconColor}
-                    @input=${this.#onInput("iconColor")}
-                  />
-                  <span class="color-value">${this._editor.iconColor}</span>
-                </div>
-              </label>
-
-              <label class="field">
-                <span class="field-label">Background</span>
-                <div class="color-field">
-                  <input
-                    class="color-input"
-                    type="color"
-                    .value=${this._editor.backgroundColor}
-                    @input=${this.#onInput("backgroundColor")}
-                  />
-                  <span class="color-value">${this._editor.backgroundColor}</span>
-                </div>
-              </label>
-            </div>
-
-            <div class="field-grid compact">
-              <label class="field">
-                <span class="field-label">Priority</span>
-                <input
-                  class="text-input"
-                  type="number"
-                  .value=${String(this._editor.sortOrder)}
-                  @input=${this.#onInput("sortOrder")}
-                />
-              </label>
-
-              <label class="toggle-field">
-                <span class="field-label">Enabled</span>
-                <uui-toggle
-                  ?checked=${this._editor.isEnabled}
-                  @change=${this.#onInput("isEnabled")}
-                ></uui-toggle>
-              </label>
-            </div>
-          </div>
-
-          <div
-            class="preview"
-            style=${`--flag-bg:${this._editor.backgroundColor};--flag-icon:${this._editor.iconColor};`}
+      <uui-box>
+        <umb-collection-toolbar slot="header">
+          <uui-button
+            look="outline"
+            color="default"
+            label="Create"
+            @click=${this.#openCreateModal}
+            ?disabled=${this._saving}
           >
-            <div class="preview-row">
-              <span class="preview-icon">
-                <uui-icon name=${this._editor.icon || "icon-flag"}></uui-icon>
-              </span>
-              <span class="preview-name">${this._editor.name || "Preview node name"}</span>
-            </div>
-          </div>
-
-          ${this._error ? html`<p class="error">${this._error}</p>` : ""}
-
-          <div class="actions">
-            <uui-button
-              look="primary"
-              color="positive"
-              label=${this._saving ? "Saving..." : this._editor.key ? "Save changes" : "Create flag"}
-              @click=${this.#save}
-              ?disabled=${this._saving || this._loading}
-            ></uui-button>
-          </div>
-        </uui-box>
-
-        <uui-box headline="Existing flags">
-          <p class="intro">Lower priority numbers win the visible row styling when multiple flags are active.</p>
-
-          ${this._loading
-            ? html`<p class="empty-state">Loading flags...</p>`
-            : this._definitions.length === 0
-              ? html`<p class="empty-state">No flags created yet.</p>`
-              : html`
-                  <div class="definitions tw-dashboard-definitions">
-                    ${this._definitions.map(
-                      (definition) => html`
-                        <article
-                          class="definition"
-                          style=${`--flag-bg:${definition.backgroundColor};--flag-icon:${definition.iconColor};`}
-                        >
-                          <div class="definition-main tw-dashboard-definition-main">
-                            <span class="preview-icon">
-                              <uui-icon name=${definition.icon}></uui-icon>
-                            </span>
-                            <strong class="definition-title">${definition.name}</strong>
-                            <uui-tag size="s">${definition.isEnabled ? "Enabled" : "Disabled"}</uui-tag>
-                            <span class="definition-priority">Priority ${definition.sortOrder}</span>
-                          </div>
-                          <div class="definition-actions tw-dashboard-actions">
-                            <uui-button
-                              look="outline"
-                              color="default"
-                              label="Edit"
-                              @click=${() => this.#startEdit(definition)}
-                              ?disabled=${this._saving}
-                            ></uui-button>
-                            <uui-button
-                              look="outline"
-                              color="danger"
-                              label="Delete"
-                              @click=${() => this.#delete(definition)}
-                              ?disabled=${this._saving}
-                            ></uui-button>
-                          </div>
-                        </article>
-                      `
-                    )}
-                  </div>
-                `}
-        </uui-box>
-      </div>
+            Create
+            <uui-symbol-expand></uui-symbol-expand>
+          </uui-button>
+        </umb-collection-toolbar>
+        ${this._error ? html`<p class="error">${this._error}</p>` : ""}
+        <uui-table class="definitions-table">
+          <uui-table-head>
+            <uui-table-head-cell class="icon-column"></uui-table-head-cell>
+            <uui-table-head-cell class="name-column">Name</uui-table-head-cell>
+            <uui-table-head-cell class="status-column">Status</uui-table-head-cell>
+            <uui-table-head-cell class="priority-column">Priority</uui-table-head-cell>
+            <uui-table-head-cell class="actions-column"></uui-table-head-cell>
+          </uui-table-head>
+          ${this.#renderRows()}
+        </uui-table>
+      </uui-box>
     `;
   }
 
@@ -349,249 +268,68 @@ export class NodeFlagsDashboardElement extends UmbElementMixin(LitElement) {
       :host {
         display: block;
         padding: var(--uui-size-layout-1);
-        color: var(--uui-color-text);
         box-sizing: border-box;
       }
 
-      .layout {
-        display: grid;
-        grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-        gap: var(--uui-size-layout-1);
-        align-items: start;
-      }
-
-      uui-box {
-        min-width: 0;
-      }
-
-      .box-headline {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--uui-size-layout-2);
-        width: 100%;
-        border-bottom: 1px solid var(--uui-color-divider);
-      }
-
-      .box-headline-title {
-        flex: 1 1 auto;
-        min-width: 0;
-        text-align: left;
-      }
-
-      .box-headline uui-button {
-        margin-left: auto;
-        flex: 0 0 auto;
-      }
-
       .intro {
-        padding-top:15px;
         margin: 0 0 var(--uui-size-layout-3);
         color: var(--uui-color-text-alt);
       }
 
-      .form {
-        display: grid;
-        gap: var(--uui-size-layout-3);
-      }
-
-      .field,
-      .toggle-field {
-        display: grid;
+      .row-actions {
+        display: flex;
         gap: var(--uui-size-space-2);
+        justify-content: flex-end;
       }
 
-      .field-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--uui-size-layout-3);
-      }
-
-      .field-grid.compact {
-        align-items: end;
-      }
-
-      .field-label {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--uui-color-text-alt);
-      }
-
-      .text-input {
+      .definitions-table {
         width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-        min-height: 40px;
-        border: 1px solid var(--uui-color-divider-emphasis);
-        border-radius: var(--uui-border-radius);
-        padding: 0 12px;
-        font: inherit;
-        background: var(--uui-color-surface);
-        color: var(--uui-color-text);
       }
 
-      select.text-input {
-        appearance: auto;
+      .definition-row:hover > uui-table-cell {
+        background: var(--uui-color-surface-alt);
       }
 
-      .color-field {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-height: 40px;
+      .icon-column {
+        width: 0;
+        text-align: center;
+        --uui-table-cell-padding: 0;
       }
 
-      .color-input {
-        width: 48px;
-        height: 40px;
-        padding: 4px;
-        border: 1px solid var(--uui-color-divider-emphasis);
-        border-radius: var(--uui-border-radius);
-        background: var(--uui-color-surface);
+      .name-column {
+        --uui-table-cell-padding: 0 var(--uui-size-5);
+        text-align: left;
       }
 
-      .color-value {
-        font-family: var(--uui-font-family-monospace, monospace);
-        font-size: 12px;
-        color: var(--uui-color-text-alt);
+      .name-column uui-button {
+        --uui-button-padding-left-factor: 0;
+        --uui-button-padding-right-factor: 0;
       }
 
-      .toggle-field {
-        align-content: center;
+      .status-column {
+        width: 0;
+        --uui-table-cell-padding: 0 var(--uui-size-5);
       }
 
-      .preview {
-        margin-bottom: 15px;
-        margin-top: var(--uui-size-layout-3);
-        padding: 14px 16px;
-        background: color-mix(in srgb, var(--flag-bg) 18%, var(--uui-color-surface));
-        border: 1px solid color-mix(in srgb, var(--flag-bg) 45%, var(--uui-color-divider));
-        border-radius: var(--uui-border-radius-xl);
+      .priority-column {
+        width: 0;
+        text-align: right;
+        --uui-table-cell-padding: 0 var(--uui-size-5);
       }
 
-      .definition {
-        background: color-mix(in srgb, var(--flag-bg) 12%, var(--uui-color-surface));
-        border: 1px solid color-mix(in srgb, var(--flag-bg) 35%, var(--uui-color-divider));
-        border-radius: var(--uui-border-radius-xl);
+      .actions-column {
+        width: 0;
+        text-align: right;
+        --uui-table-cell-padding: 0 var(--uui-size-5);
       }
 
-      .preview-row,
-      .definition-main {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        min-width: 0;
-      }
-
-      .preview-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        min-width: 18px;
-        min-height: 18px;
-        padding: 0;
-      }
-
-      .preview-icon uui-icon {
-        color: var(--flag-icon);
+      umb-icon {
         font-size: 16px;
-      }
-
-      .definition .preview-icon uui-icon {
-        color: var(--flag-icon);
-      }
-
-      .preview-name {
-        min-width: 0;
-      }
-
-      .actions,
-      .definition-actions {
-        display: flex;
-        gap: var(--uui-size-space-3);
-        flex-wrap: nowrap;
-        align-items: center;
-      }
-
-      .definitions {
-        display: grid;
-        gap: var(--uui-size-layout-1);
-      }
-
-      .definition {
-        padding: 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .definition-title,
-      .definition-priority {
-        white-space: nowrap;
-      }
-
-      .definition-main {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: nowrap;
-        min-width: 0;
-      }
-
-      .definition-title {
-        font-weight: 700;
-      }
-
-      .definition-priority {
-        color: var(--uui-color-text-alt);
-        font-size: 12px;
-      }
-
-      .empty-state {
-        color: var(--uui-color-text-alt);
       }
 
       .error {
         color: #b42318;
-        margin: var(--uui-size-layout-3) 0 0;
-      }
-
-      @media (max-width: 1100px) {
-        .layout {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 700px) {
-        :host {
-          padding: var(--uui-size-layout-3);
-        }
-
-        .field-grid,
-        .definition {
-          grid-template-columns: 1fr;
-          display: grid;
-        }
-
-        .box-headline {
-          align-items: start;
-        }
-
-        .definition-main {
-          flex-wrap: wrap;
-        }
-
-        .definition-actions {
-          justify-content: start;
-          flex-wrap: nowrap;
-        }
-      }
-
-      .definition-actions uui-button::part(button) {
-        min-height: 28px;
-        padding-block: 0;
+        margin: 0 0 var(--uui-size-layout-3);
       }
     `,
   ];

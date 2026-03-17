@@ -112,8 +112,9 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
 
   render() {
     return html`
-      <uui-box headline="Who am I?">
-        <div slot="header">[Server]</div>
+    <umb-body-layout>
+      <umb-collection-toolbar slot="header">
+      <div slot="header">[Server]</div>
         <h2>
           <uui-icon name="icon-user"></uui-icon>${this._serverUserData?.email
             ? this._serverUserData.email
@@ -136,8 +137,7 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
           email and list of user groups. It also displays a Notification with
           your details.
         </p>
-      </uui-box>
-
+      </umb-collection-toolbar>
       <uui-box headline="What's my Name?">
         <div slot="header">[Server]</div>
         <h2><uui-icon name="icon-user"></uui-icon> ${this._yourName}</h2>
@@ -182,6 +182,7 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
           >${JSON.stringify(this._contextCurrentUser, null, 2)}</umb-code-block
         >
       </uui-box>
+      </umb-body-layout>
     `;
   }
 

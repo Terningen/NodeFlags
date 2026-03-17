@@ -16,4 +16,10 @@ export const manifests: Array<UmbExtensionManifest> = [
       },
     ],
   },
+  {
+    type: "modal",
+    alias: "NodeFlags.Modal.NodeFlag",
+    name: "Node Flag Modal",
+    element: () => import("./node-flag-modal.element.js"),
+  },
 ];

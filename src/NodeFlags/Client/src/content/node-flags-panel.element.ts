@@ -146,35 +146,49 @@ export class NodeFlagsPanelElement extends LitElement {
 
     return html`
       <div class="backdrop" @click=${() => this.close()}></div>
-      <uui-box class="panel" headline="Node Flags">
-        <div slot="header">
+      <section class="panel">
+        <header class="panel-header">
+          <div class="panel-title">Node Flags</div>
           <uui-button look="outline" color="default" label="Close" @click=${() => this.close()}></uui-button>
+        </header>
+
+        <div class="panel-body">
+          <p class="intro">Toggle one or more flags for this content node.</p>
+
+          ${this._loading && !this._state ? html`<p class="empty-state">Loading…</p>` : ""}
+          ${this._error ? html`<p class="error">${this._error}</p>` : ""}
+
+          <uui-table>
+            <uui-table-head>
+              <uui-table-head-cell style="text-align:center; width: 0;"></uui-table-head-cell>
+              <uui-table-head-cell>Name</uui-table-head-cell>
+              <uui-table-head-cell style="width: 0; text-align:right;"></uui-table-head-cell>
+            </uui-table-head>
+
+            ${(this._state?.availableFlags ?? []).map(
+              (flag) => html`
+                <uui-table-row style=${`--flag-bg:${flag.backgroundColor};--flag-icon:${flag.iconColor};`}>
+                  <uui-table-cell class="icon-cell">
+                    <umb-icon name=${flag.icon}></umb-icon>
+                  </uui-table-cell>
+                  <uui-table-cell class="name-cell">${flag.name}</uui-table-cell>
+                  <uui-table-cell class="action-cell">
+                    <uui-button
+                      look=${activeKeys.has(flag.key) ? "primary" : "outline"}
+                      color=${activeKeys.has(flag.key) ? "positive" : "default"}
+                      label=${activeKeys.has(flag.key) ? "Disable" : "Enable"}
+                      @click=${() => this.#toggle(flag)}
+                      ?disabled=${this._loading}
+                    >
+                      ${activeKeys.has(flag.key) ? "Disable" : "Enable"}
+                    </uui-button>
+                  </uui-table-cell>
+                </uui-table-row>
+              `
+            )}
+          </uui-table>
         </div>
-
-        <p class="intro">Toggle one or more flags for this content node.</p>
-
-        ${this._loading && !this._state ? html`<p class="empty-state">Loading…</p>` : ""}
-        ${this._error ? html`<p class="error">${this._error}</p>` : ""}
-
-        <div class="flags">
-          ${(this._state?.availableFlags ?? []).map(
-            (flag) => html`
-              <button
-                class=${activeKeys.has(flag.key) ? "flag active" : "flag"}
-                style=${`--flag-bg:${flag.backgroundColor};--flag-icon:${flag.iconColor};`}
-                @click=${() => this.#toggle(flag)}
-                ?disabled=${this._loading}
-              >
-                <span class="icon">
-                  <uui-icon name=${flag.icon}></uui-icon>
-                </span>
-                <span class="name">${flag.name}</span>
-                <uui-tag size="s">${activeKeys.has(flag.key) ? "Enabled" : "Disabled"}</uui-tag>
-              </button>
-            `
-          )}
-        </div>
-      </uui-box>
+      </section>
     `;
   }
 
@@ -195,13 +209,34 @@ export class NodeFlagsPanelElement extends LitElement {
 
       .panel {
         position: absolute;
-        right: 24px;
-        top: 24px;
-        width: 360px;
-        max-width: calc(100vw - 48px);
-        max-height: calc(100vh - 48px);
-        overflow: auto;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 420px;
+        max-width: min(420px, 100vw);
+        background: var(--uui-color-surface);
+        border-left: 1px solid var(--uui-color-divider);
         box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--uui-size-space-3);
+        padding: var(--uui-size-layout-1);
+        border-bottom: 1px solid var(--uui-color-divider);
+      }
+
+      .panel-title {
+        font-weight: 700;
+      }
+
+      .panel-body {
+        overflow: auto;
+        padding: var(--uui-size-layout-1);
       }
 
       .intro,
@@ -214,32 +249,16 @@ export class NodeFlagsPanelElement extends LitElement {
         color: var(--uui-color-text-alt);
       }
 
-      .flags {
-        display: grid;
-        gap: 8px;
+      .icon-cell,
+      .action-cell {
+        width: 0;
       }
 
-      .flag {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-        text-align: left;
-        border-radius: var(--uui-border-radius);
-        border: 1px solid var(--uui-color-divider);
-        background: color-mix(in srgb, var(--flag-bg) 14%, var(--uui-color-surface));
-        padding: 10px 12px;
-        cursor: pointer;
-        font: inherit;
+      .action-cell {
+        text-align: right;
       }
 
-      .flag.active {
-        border-color: color-mix(in srgb, var(--flag-bg) 35%, var(--uui-color-divider-emphasis));
-        background: color-mix(in srgb, var(--flag-bg) 24%, var(--uui-color-surface));
-      }
-
-      .icon {
+      .icon-cell {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -247,12 +266,12 @@ export class NodeFlagsPanelElement extends LitElement {
         min-width: 18px;
       }
 
-      .icon uui-icon {
+      .icon-cell umb-icon {
         color: var(--flag-icon);
         font-size: 16px;
       }
 
-      .name {
+      .name-cell {
         min-width: 0;
       }
 
