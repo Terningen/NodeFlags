@@ -9,13 +9,13 @@
   <PropertyGroup>
     <Product>Umbraco.Community.NodeFlags</Product>
     <PackageId>Umbraco.Community.NodeFlags</PackageId>
-    <Title>Node Flags </Title>
-    <Description>...</Description>
-    <PackageTags>umbraco;umbraco-marketplace</PackageTags>
+    <Title>Node Flags</Title>
+    <Description>Add reusable visual flags to Umbraco content nodes so editors can mark, prioritize, and identify content directly in the backoffice content tree.</Description>
+    <PackageTags>umbraco;umbraco-marketplace;content-tree;backoffice;editor-tools;flags</PackageTags>
     <Authors>Kim Gordon Taanning</Authors>
     <Copyright>$([System.DateTime]::UtcNow.ToString(`yyyy`)) © Kim Gordon Taanning</Copyright>
-    <PackageProjectUrl>https://github.com/Terningen/Node Flags</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Terningen/Node Flags</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Terningen/RequiredNodeFlag</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Terningen/RequiredNodeFlag</RepositoryUrl>
     <PackageReadmeFile>README_nuget.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
