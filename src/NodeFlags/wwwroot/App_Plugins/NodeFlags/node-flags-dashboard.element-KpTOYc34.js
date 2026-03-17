@@ -4,11 +4,11 @@ import { UMB_NOTIFICATION_CONTEXT as F } from "@umbraco-cms/backoffice/notificat
 import { n as v } from "./node-flags-CQwlbdJU.js";
 var I = Object.defineProperty, P = Object.getOwnPropertyDescriptor, E = (i) => {
   throw TypeError(i);
-}, h = (i, e, t, n) => {
-  for (var d = n > 1 ? void 0 : n ? P(e, t) : e, x = i.length - 1, y; x >= 0; x--)
-    (y = i[x]) && (d = (n ? y(e, t, d) : y(d)) || d);
-  return n && d && I(e, t, d), d;
-}, C = (i, e, t) => e.has(i) || E("Cannot " + t), l = (i, e, t) => (C(i, e, "read from private field"), t ? t.call(i) : e.get(i)), p = (i, e, t) => e.has(i) ? E("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(i) : e.set(i, t), S = (i, e, t, n) => (C(i, e, "write to private field"), e.set(i, t), t), o = (i, e, t) => (C(i, e, "access private method"), t), m, a, b, w, z, s, $, k, u, _;
+}, h = (i, e, a, n) => {
+  for (var d = n > 1 ? void 0 : n ? P(e, a) : e, x = i.length - 1, y; x >= 0; x--)
+    (y = i[x]) && (d = (n ? y(e, a, d) : y(d)) || d);
+  return n && d && I(e, a, d), d;
+}, C = (i, e, a) => e.has(i) || E("Cannot " + a), r = (i, e, a) => (C(i, e, "read from private field"), a ? a.call(i) : e.get(i)), p = (i, e, a) => e.has(i) ? E("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(i) : e.set(i, a), S = (i, e, a, n) => (C(i, e, "write to private field"), e.set(i, a), a), o = (i, e, a) => (C(i, e, "access private method"), a), m, t, b, w, z, s, $, k, u, _;
 const W = [
   { value: "icon-flag", label: "Flag" },
   { value: "icon-alert", label: "Alert" },
@@ -21,12 +21,12 @@ const W = [
   sortOrder: 0,
   isEnabled: !0
 });
-let r = class extends M(O) {
+let l = class extends M(O) {
   constructor() {
-    super(), p(this, a), this._definitions = [], this._loading = !1, this._saving = !1, this._editor = f(), this._error = "", p(this, m), p(this, w, () => {
+    super(), p(this, t), this._definitions = [], this._loading = !1, this._saving = !1, this._editor = f(), this._error = "", p(this, m), p(this, w, () => {
       this._editor = f();
     }), p(this, s, (i) => (e) => {
-      const t = e.target, n = i === "isEnabled" ? t.checked : i === "sortOrder" ? Number(t.value || 0) : t.value;
+      const a = e.target, n = i === "isEnabled" ? a.checked : i === "sortOrder" ? Number(a.value || 0) : a.value;
       this._editor = {
         ...this._editor,
         [i]: n
@@ -44,63 +44,63 @@ let r = class extends M(O) {
       try {
         if (!i.name)
           throw new Error("A flag name is required.");
-        this._editor.key ? (await v.updateDefinition(this._editor.key, i), o(this, a, u).call(this, "positive", "Node flag updated", i.name)) : (await v.createDefinition(i), o(this, a, u).call(this, "positive", "Node flag created", i.name)), this._editor = f(), await o(this, a, b).call(this);
+        this._editor.key ? (await v.updateDefinition(this._editor.key, i), o(this, t, u).call(this, "positive", "Node flag updated", i.name)) : (await v.createDefinition(i), o(this, t, u).call(this, "positive", "Node flag created", i.name)), this._editor = f(), await o(this, t, b).call(this);
       } catch (e) {
-        this._error = o(this, a, _).call(this, e), o(this, a, u).call(this, "danger", "Unable to save node flag", this._error);
+        this._error = o(this, t, _).call(this, e), o(this, t, u).call(this, "danger", "Unable to save node flag", this._error);
       } finally {
         this._saving = !1;
       }
     }), p(this, k, async (i) => {
       this._saving = !0;
       try {
-        await v.deleteDefinition(i.key), o(this, a, u).call(this, "positive", "Node flag deleted", i.name), this._editor.key === i.key && (this._editor = f()), await o(this, a, b).call(this);
+        await v.deleteDefinition(i.key), o(this, t, u).call(this, "positive", "Node flag deleted", i.name), this._editor.key === i.key && (this._editor = f()), await o(this, t, b).call(this);
       } catch (e) {
-        this._error = o(this, a, _).call(this, e), o(this, a, u).call(this, "danger", "Unable to delete node flag", this._error);
+        this._error = o(this, t, _).call(this, e), o(this, t, u).call(this, "danger", "Unable to delete node flag", this._error);
       } finally {
         this._saving = !1;
       }
     }), this.consumeContext(F, (i) => {
       S(this, m, i);
-    }), o(this, a, b).call(this);
+    }), o(this, t, b).call(this);
   }
   render() {
     return c`
-      <div class="layout">
+      <div class="layout tw-dashboard-layout">
         <uui-box>
-          <div class="box-headline">
+          <div class="box-headline tw-dashboard-box-headline">
             <span class="box-headline-title">${this._editor.key ? "Edit flag" : "Create flag"}</span>
             <uui-button
               look="primary"
               color="default"
               label="New flag"
-              @click=${l(this, w)}
+              @click=${r(this, w)}
               ?disabled=${this._saving}
             ></uui-button>
           </div>
 
           <p class="intro">Create reusable flags for editors to apply in the Content tree.</p>
 
-          <div class="form">
+          <div class="form tw-dashboard-form">
             <label class="field">
               <span class="field-label">Name</span>
               <input
                 class="text-input"
                 .value=${this._editor.name}
-                @input=${l(this, s).call(this, "name")}
+                @input=${r(this, s).call(this, "name")}
                 placeholder="Flag name"
               />
             </label>
 
             <label class="field">
               <span class="field-label">Icon</span>
-              <select class="text-input" .value=${this._editor.icon ?? "icon-flag"} @change=${l(this, s).call(this, "icon")}>
+              <select class="text-input" .value=${this._editor.icon ?? "icon-flag"} @change=${r(this, s).call(this, "icon")}>
                 ${W.map(
       (i) => c`<option value=${i.value}>${i.label}</option>`
     )}
               </select>
             </label>
 
-            <div class="field-grid">
+            <div class="field-grid tw-dashboard-field-grid">
               <label class="field">
                 <span class="field-label">Icon color</span>
                 <div class="color-field">
@@ -108,7 +108,7 @@ let r = class extends M(O) {
                     class="color-input"
                     type="color"
                     .value=${this._editor.iconColor}
-                    @input=${l(this, s).call(this, "iconColor")}
+                    @input=${r(this, s).call(this, "iconColor")}
                   />
                   <span class="color-value">${this._editor.iconColor}</span>
                 </div>
@@ -121,7 +121,7 @@ let r = class extends M(O) {
                     class="color-input"
                     type="color"
                     .value=${this._editor.backgroundColor}
-                    @input=${l(this, s).call(this, "backgroundColor")}
+                    @input=${r(this, s).call(this, "backgroundColor")}
                   />
                   <span class="color-value">${this._editor.backgroundColor}</span>
                 </div>
@@ -135,7 +135,7 @@ let r = class extends M(O) {
                   class="text-input"
                   type="number"
                   .value=${String(this._editor.sortOrder)}
-                  @input=${l(this, s).call(this, "sortOrder")}
+                  @input=${r(this, s).call(this, "sortOrder")}
                 />
               </label>
 
@@ -143,7 +143,7 @@ let r = class extends M(O) {
                 <span class="field-label">Enabled</span>
                 <uui-toggle
                   ?checked=${this._editor.isEnabled}
-                  @change=${l(this, s).call(this, "isEnabled")}
+                  @change=${r(this, s).call(this, "isEnabled")}
                 ></uui-toggle>
               </label>
             </div>
@@ -168,7 +168,7 @@ let r = class extends M(O) {
               look="primary"
               color="positive"
               label=${this._saving ? "Saving..." : this._editor.key ? "Save changes" : "Create flag"}
-              @click=${l(this, $)}
+              @click=${r(this, $)}
               ?disabled=${this._saving || this._loading}
             ></uui-button>
           </div>
@@ -178,14 +178,14 @@ let r = class extends M(O) {
           <p class="intro">Lower priority numbers win the visible row styling when multiple flags are active.</p>
 
           ${this._loading ? c`<p class="empty-state">Loading flags...</p>` : this._definitions.length === 0 ? c`<p class="empty-state">No flags created yet.</p>` : c`
-                  <div class="definitions">
+                  <div class="definitions tw-dashboard-definitions">
                     ${this._definitions.map(
       (i) => c`
                         <article
                           class="definition"
                           style=${`--flag-bg:${i.backgroundColor};--flag-icon:${i.iconColor};`}
                         >
-                          <div class="definition-main">
+                          <div class="definition-main tw-dashboard-definition-main">
                             <span class="preview-icon">
                               <uui-icon name=${i.icon}></uui-icon>
                             </span>
@@ -193,19 +193,19 @@ let r = class extends M(O) {
                             <uui-tag size="s">${i.isEnabled ? "Enabled" : "Disabled"}</uui-tag>
                             <span class="definition-priority">Priority ${i.sortOrder}</span>
                           </div>
-                          <div class="definition-actions">
+                          <div class="definition-actions tw-dashboard-actions">
                             <uui-button
                               look="outline"
                               color="default"
                               label="Edit"
-                              @click=${() => o(this, a, z).call(this, i)}
+                              @click=${() => o(this, t, z).call(this, i)}
                               ?disabled=${this._saving}
                             ></uui-button>
                             <uui-button
                               look="outline"
                               color="danger"
                               label="Delete"
-                              @click=${() => l(this, k).call(this, i)}
+                              @click=${() => r(this, k).call(this, i)}
                               ?disabled=${this._saving}
                             ></uui-button>
                           </div>
@@ -220,13 +220,13 @@ let r = class extends M(O) {
   }
 };
 m = /* @__PURE__ */ new WeakMap();
-a = /* @__PURE__ */ new WeakSet();
+t = /* @__PURE__ */ new WeakSet();
 b = async function() {
   this._loading = !0, this._error = "";
   try {
     this._definitions = await v.getDefinitions();
   } catch (i) {
-    this._error = o(this, a, _).call(this, i), o(this, a, u).call(this, "danger", "Unable to load node flags", this._error);
+    this._error = o(this, t, _).call(this, i), o(this, t, u).call(this, "danger", "Unable to load node flags", this._error);
   } finally {
     this._loading = !1;
   }
@@ -246,11 +246,11 @@ z = function(i) {
 s = /* @__PURE__ */ new WeakMap();
 $ = /* @__PURE__ */ new WeakMap();
 k = /* @__PURE__ */ new WeakMap();
-u = function(i, e, t) {
-  l(this, m)?.peek(i, {
+u = function(i, e, a) {
+  r(this, m)?.peek(i, {
     data: {
       headline: e,
-      message: t
+      message: a
     }
   });
 };
@@ -263,7 +263,7 @@ _ = function(i) {
   }
   return "Unknown error";
 };
-r.styles = [
+l.styles = [
   N`
       :host {
         display: block;
@@ -516,25 +516,25 @@ r.styles = [
 ];
 h([
   g()
-], r.prototype, "_definitions", 2);
+], l.prototype, "_definitions", 2);
 h([
   g()
-], r.prototype, "_loading", 2);
+], l.prototype, "_loading", 2);
 h([
   g()
-], r.prototype, "_saving", 2);
+], l.prototype, "_saving", 2);
 h([
   g()
-], r.prototype, "_editor", 2);
+], l.prototype, "_editor", 2);
 h([
   g()
-], r.prototype, "_error", 2);
-r = h([
+], l.prototype, "_error", 2);
+l = h([
   D("node-flags-dashboard")
-], r);
-const j = r;
+], l);
+const j = l;
 export {
-  r as NodeFlagsDashboardElement,
+  l as NodeFlagsDashboardElement,
   j as default
 };
-//# sourceMappingURL=node-flags-dashboard.element-1bmyONLC.js.map
+//# sourceMappingURL=node-flags-dashboard.element-KpTOYc34.js.map

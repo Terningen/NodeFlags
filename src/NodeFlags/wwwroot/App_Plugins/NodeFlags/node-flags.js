@@ -25,7 +25,7 @@ const a = [
     name: "Node Flags Dashboard",
     alias: "NodeFlags.Dashboard",
     type: "dashboard",
-    js: () => import("./node-flags-dashboard.element-1bmyONLC.js"),
+    js: () => import("./node-flags-dashboard.element-KpTOYc34.js"),
     weight: 100,
     meta: {
       label: "Node Flags",

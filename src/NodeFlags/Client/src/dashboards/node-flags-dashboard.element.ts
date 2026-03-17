@@ -4,7 +4,6 @@ import {
   html,
   customElement,
   state,
-  unsafeCSS,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
@@ -13,7 +12,6 @@ import {
   type NodeFlagDefinition,
   type NodeFlagDefinitionSaveModel,
 } from "../api/node-flags.js";
-import dashboardTailwindCss from "./node-flags-dashboard.tailwind.css?inline";
 
 type EditorState = NodeFlagDefinitionSaveModel & {
   key?: string;
@@ -347,7 +345,6 @@ export class NodeFlagsDashboardElement extends UmbElementMixin(LitElement) {
   }
 
   static styles = [
-    unsafeCSS(dashboardTailwindCss),
     css`
       :host {
         display: block;

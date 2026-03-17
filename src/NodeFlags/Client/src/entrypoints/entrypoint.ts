@@ -3,7 +3,6 @@ import type {
   UmbEntryPointOnUnload,
 } from "@umbraco-cms/backoffice/extension-api";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
-import "../styles/tailwind.css";
 import { client } from "../api/client.gen.js";
 import { startNodeFlagsTreeDecorator } from "../content/tree-decorator.js";
 
